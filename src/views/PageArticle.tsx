@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { getUser } from "../features/user/userSlice";
 
@@ -45,6 +45,7 @@ const Article = () => {
     const [Comments, setComments] = useState<icomments>({ comments: [], DataisLoaded: false });
 
     let { articleSlug } = useParams();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch("https://api.realworld.io/api/articles/" + articleSlug)
@@ -63,7 +64,19 @@ const Article = () => {
             })
     }, [Comments.DataisLoaded, articleSlug]);
 
+    const delArticle = () => {
+        fetch(`https://api.realworld.io/api/articles/${Article?.slug}`, {
+            method: 'DELETE',
+            mode: 'cors',
+            headers: {
+                authorization: `Token ${user.token}`,
+                'Content-Type': 'application/json'
 
+            },
+        })
+            .then((res) => res.status < 400 ? navigate("/") : console.log("error"))
+
+    }
 
     return (
         <div className="article-page">
@@ -82,11 +95,11 @@ const Article = () => {
                             <span className="date">{(new Date(Article?.createdAt || "")).toDateString()}</span>
                         </div>
                         {user.token && user.username === Article?.author.username && (<>
-                            <a className="btn btn-outline-secondary btn-sm" href={"/edit-article/" + Article?.slug}>
+                            <Link className="btn btn-outline-secondary btn-sm" to={"/edit-article/" + Article?.slug}>
                                 <i className="ion-edit"></i> Edit Article
-                            </a>
+                            </Link>
                             &nbsp;
-                            <button className="btn btn-outline-danger btn-sm">
+                            <button className="btn btn-outline-danger btn-sm" onClick={() => delArticle()}>
                                 <i className="ion-trash-a"></i> Delete Article
                             </button>
                         </>)}
